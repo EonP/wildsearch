@@ -1,0 +1,39 @@
+name: CI
+
+on:                                  # When it runs
+  pull_request:                      # on every PR (and every new push to a PR)
+  push:
+    branches: [main]                 # and after each merge, to confirm main is still green
+
+permissions:
+  contents: read                     # the workflow may only read the repo, never write
+
+concurrency:                         # if you push again while CI is running,
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true           # cancel the old run instead time
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4    # download your code onto the machine
+      - uses: astral-sh/setup-uv@v6  # install uv
+      - run: uv sync --locked
+      - run: uv run pre-commit run --all-files --show-diff-on-failure
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest
