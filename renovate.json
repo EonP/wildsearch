@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices", ":maintainLockFilesWeekly"],
+  "timezone": "Europe/Zurich",
+  "schedule": ["before 10am on monday"],
+  "semanticCommits": "enabled",
+  "labels": ["dependencies"],
+  "assignees": ["EonP"],
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "pre-commit": { "enabled": true },
+  "packageRules": [
+    {
+      "description": "GitHub Actions in one PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "addLabels": ["ci"]
+    },
+    {
+      "description": "Small Python updates in one PR",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "python dependencies"
+    },
+    {
+      "description": "ML libraries: separate PR, review carefully (comes last so it wins)",
+      "matchPackageNames": ["torch", "torchvision", "open-clip-torch", "faiss-cpu"],
+      "groupName": "ml dependencies",
+      "addLabels": ["ml"]
+    },
+    {
+      "description": "Major updates always get their own PR and a label",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "addLabels": ["security"]
+  }
+}
