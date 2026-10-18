@@ -23,6 +23,11 @@
       "groupName": "python dependencies"
     },
     {
+      "description": "Python version is chosen manually (matches the CI matrix)",
+      "matchManagers": ["pyenv"],
+      "enabled": false
+    },
+    {
       "description": "ML libraries: separate PR, review carefully (comes last so it wins)",
       "matchPackageNames": ["torch", "torchvision", "open-clip-torch", "faiss-cpu"],
       "groupName": "ml dependencies",
