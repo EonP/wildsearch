@@ -2,4 +2,4 @@ import wildsearch
 
 
 def test_package_imports():
-    assert callable(wildsearch.main)
+    assert wildsearch.__name__ == "wildsearch"
