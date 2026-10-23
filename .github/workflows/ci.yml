@@ -17,8 +17,8 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4    # download your code onto the machine
-      - uses: astral-sh/setup-uv@v6  # install uv
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1    # v7    # download your code onto the machine
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e  # v10.3.2  # install uv
       - run: uv sync --locked
       - run: uv run pre-commit run --all-files --show-diff-on-failure
 
@@ -30,8 +30,8 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
