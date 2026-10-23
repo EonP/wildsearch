@@ -3,44 +3,47 @@ from typing import Annotated
 
 import typer
 
-app = typer.Typer(
-    help="Find photos by describing them in plain language.",
-    no_args_is_help=True,
-)
+from wildsearch.search import search_folder
 
-DbOption = Annotated[
-    Path | None,
-    typer.Option(
-        "--db",
-        envvar="WILDSEARCH_DB",
-        help="Path to the index database. Defaults to the user data directory.",
-    ),
-]
+app = typer.Typer(no_args_is_help=True)
 
 
-@app.command()
-def index(
-    paths: Annotated[list[Path], typer.Argument(help="Folders to scan for photos.")],
-    db: DbOption = None,
-) -> None:
-    """Scan folders and embed new or changed photos."""
-    typer.echo("index: not implemented yet")
+@app.callback()
+def main() -> None:
+    """Find photos by describing them in plain language."""
+    # Empty on purpose: a callback keeps Typer in "group of commands" mode, so the
+    # command stays `wildsearch search ...` even while `search` is the only command.
 
 
 @app.command()
 def search(
     query: Annotated[str, typer.Argument(help="Plain-language description of the photo.")],
-    n: Annotated[int, typer.Option("-n", help="Number of results to show.")] = 10,
+    n: Annotated[int, typer.Option("-n", min=1, help="Number of results to show.")] = 10,
     in_path: Annotated[
-        Path | None, typer.Option("-p", help="Only search within this folder.")
+        Path | None,
+        typer.Option(
+            "-p",
+            exists=True,
+            file_okay=False,
+            help="Folder to search. Defaults to the current folder.",
+        ),
     ] = None,
-    db: DbOption = None,
 ) -> None:
-    """Search the index with a free-text query."""
-    typer.echo("search: not implemented yet")
+    """Search a folder with a free-text query."""
+    from wildsearch.clip import ClipEmbedder  # slow import, so only when searching
 
+    folder = in_path or Path.cwd()
 
-@app.command()
-def status(db: DbOption = None) -> None:
-    """Show indexed folders, photo counts and database size."""
-    typer.echo("status: not implemented yet")
+    # Status messages go to stderr, so piping the results stays clean.
+    typer.echo("Loading model…", err=True)
+    embedder = ClipEmbedder()
+    typer.echo(f"Searching {folder}…", err=True)
+    results = search_folder(embedder, folder, query, n)
+
+    if not results:
+        typer.echo(f"No photos found in {folder}", err=True)
+        raise typer.Exit(code=1)
+
+    # One result per line on stdout: rank, score, path.
+    for rank_number, (path, score) in enumerate(results, start=1):
+        typer.echo(f"{rank_number:>3}  {score:.3f}  {path}")
