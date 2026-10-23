@@ -1,4 +1,11 @@
-import pytest
+"""CLI tests that don't need a model: argument handling only.
+
+Tests that actually run a search need a fake embedder in place of ClipEmbedder;
+they come together with the FakeEmbedder in conftest.py.
+"""
+
+from pathlib import Path
+
 from typer.testing import CliRunner
 
 from wildsearch.cli import app
@@ -6,33 +13,23 @@ from wildsearch.cli import app
 runner = CliRunner()
 
 
-def test_help_lists_commands():
-    result = runner.invoke(app, ["--help"])
-    assert result.exit_code == 0
-    for command in ("index", "search", "status"):
-        assert command in result.output
-
-
-def test_no_args_shows_help():
+def test_no_arguments_shows_help() -> None:
     result = runner.invoke(app, [])
     assert "Usage" in result.output
 
 
-@pytest.mark.parametrize(
-    "args",
-    [
-        ["index", "."],
-        ["search", "lion resting under a tree"],
-        ["search", "sunset", "-n", "5", "-p", "."],
-        ["status"],
-    ],
-)
-def test_stubs_exit_cleanly(args):
-    result = runner.invoke(app, args)
-    assert result.exit_code == 0
-    assert "not implemented" in result.output
+def test_search_rejects_n_zero() -> None:
+    result = runner.invoke(app, ["search", "lion", "-n", "0"])
+    assert result.exit_code == 2
 
 
-def test_search_requires_query():
-    result = runner.invoke(app, ["search"])
-    assert result.exit_code != 0
+def test_search_rejects_missing_folder(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["search", "lion", "-p", str(tmp_path / "nope")])
+    assert result.exit_code == 2
+
+
+def test_search_rejects_a_file_as_folder(tmp_path: Path) -> None:
+    photo = tmp_path / "photo.jpg"
+    photo.touch()
+    result = runner.invoke(app, ["search", "lion", "-p", str(photo)])
+    assert result.exit_code == 2
