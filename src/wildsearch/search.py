@@ -1,11 +1,9 @@
-from itertools import batched
 from pathlib import Path
 
 import numpy as np
 
 from wildsearch.embedder import Embedder
-from wildsearch.images import load_image
-from wildsearch.scanner import scan
+from wildsearch.store import Store
 
 
 def rank(image_vecs: np.ndarray, query_vec: np.ndarray, n: int) -> list[tuple[int, float]]:
@@ -21,23 +19,26 @@ def rank(image_vecs: np.ndarray, query_vec: np.ndarray, n: int) -> list[tuple[in
     return [(int(idx), float(scores[idx])) for idx in ordered_indices]
 
 
-def search_folder(embedder: Embedder, folder: Path, query: str, n: int) -> list[tuple[Path, float]]:
-    """Return the n photos in `folder` that best match `query`, best first."""
-    paths = [f.path for f in scan(folder)]
+def search_index(
+    store: Store, embedder: Embedder, folder: Path, query: str, n: int
+) -> list[tuple[Path, float]]:
+    """Return the n indexed photos in `folder` that best match `query`, best first.
+
+    Reads the stored vectors; no photo is opened. Empty if the folder isn't indexed.
+    """
+    paths, image_vecs = store.load_vectors(embedder.model_id, folder)
     if not paths:
         return []
-    image_vecs = get_image_vecs(embedder, paths)
     query_vec = embedder.embed_texts([query])[0]
-    matches = rank(image_vecs, query_vec, n)
-    return [(paths[i], score) for i, score in matches]
+    return [(paths[i], score) for i, score in rank(image_vecs, query_vec, n)]
 
 
-def get_image_vecs(embedder: Embedder, paths: list[Path], batch_size: int = 32) -> np.ndarray:
-    """Embeds photos in batches of `batch_size`. Row i belongs to paths[i]."""
-    if batch_size < 1:
-        raise ValueError(f"batch_size must be at least 1, got {batch_size}")
-    batches = []
-    for batch in batched(paths, batch_size):
-        images = [load_image(p) for p in batch]
-        batches.append(embedder.embed_images(images))
-    return np.vstack(batches)
+# def get_image_vecs(embedder: Embedder, paths: list[Path], batch_size: int = 32) -> np.ndarray:
+#     """Embeds photos in batches of `batch_size`. Row i belongs to paths[i]."""
+#     if batch_size < 1:
+#         raise ValueError(f"batch_size must be at least 1, got {batch_size}")
+#     batches = []
+#     for batch in batched(paths, batch_size):
+#         images = [load_image(p) for p in batch]
+#         batches.append(embedder.embed_images(images))
+#     return np.vstack(batches)
