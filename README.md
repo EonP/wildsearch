@@ -94,7 +94,7 @@ flowchart LR
 Requires Python 3.12+ and uv
 
 ```console
-$ git clone https://github.com/<you>/wildsearch && cd wildsearch
+$ git clone https://github.com/EonP/wildsearch && cd wildsearch
 $ uv tool install --editable ".[ml]"
 ```
 
