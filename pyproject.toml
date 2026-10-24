@@ -11,6 +11,8 @@ license = "MIT"
 dependencies = [
     "numpy>=2.5.4",
     "pillow>=13.0.0",
+    "platformdirs>=4.13.3",
+    "rich>=15.0.0",
     "typer>=0.27.3",
 ]
 
