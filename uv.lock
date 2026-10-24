@@ -1305,6 +1305,8 @@ source = { editable = "." }
 dependencies = [
     { name = "numpy" },
     { name = "pillow" },
+    { name = "platformdirs" },
+    { name = "rich" },
     { name = "typer" },
 ]
 
@@ -1326,6 +1328,8 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.5.4" },
     { name = "open-clip-torch", marker = "extra == 'ml'", specifier = ">=3.3.0" },
     { name = "pillow", specifier = ">=13.0.0" },
+    { name = "platformdirs", specifier = ">=4.13.3" },
+    { name = "rich", specifier = ">=15.0.0" },
     { name = "torch", marker = "extra == 'ml'", specifier = ">=2.14.1" },
     { name = "typer", specifier = ">=0.27.3" },
 ]
