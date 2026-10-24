@@ -1,3 +1,4 @@
+from itertools import batched
 from pathlib import Path
 
 import numpy as np
