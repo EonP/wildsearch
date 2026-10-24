@@ -1,3 +1,4 @@
+from itertools import batched
 from pathlib import Path
 
 import numpy as np
@@ -25,8 +26,18 @@ def search_folder(embedder: Embedder, folder: Path, query: str, n: int) -> list[
     paths = [f.path for f in scan(folder)]
     if not paths:
         return []
-    images = [load_image(p) for p in paths]
-    image_vecs = embedder.embed_images(images)
+    image_vecs = get_image_vecs(embedder, paths)
     query_vec = embedder.embed_texts([query])[0]
     matches = rank(image_vecs, query_vec, n)
     return [(paths[i], score) for i, score in matches]
+
+
+def get_image_vecs(embedder: Embedder, paths: list[Path], batch_size: int = 32) -> np.ndarray:
+    """Embeds photos in batches of `batch_size`. Row i belongs to paths[i]."""
+    if batch_size < 1:
+        raise ValueError(f"batch_size must be at least 1, got {batch_size}")
+    batches = []
+    for batch in batched(paths, batch_size):
+        images = [load_image(p) for p in batch]
+        batches.append(embedder.embed_images(images))
+    return np.vstack(batches)

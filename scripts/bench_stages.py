@@ -9,10 +9,10 @@ import time
 from pathlib import Path
 
 from wildsearch.clip import ClipEmbedder
-from wildsearch.images import load_image
 from wildsearch.scanner import scan
-from wildsearch.search import rank
+from wildsearch.search import get_image_vecs, rank
 
+batch_size = int(sys.argv[3]) if len(sys.argv) > 3 else 32
 folder, query = Path(sys.argv[1]), sys.argv[2]
 timings: dict[str, float] = {}
 
@@ -31,11 +31,8 @@ t = stage("load model", t)
 paths = [f.path for f in scan(folder)]
 t = stage("scan", t)
 
-images = [load_image(p) for p in paths]
-t = stage("decode", t)
-
-image_vecs = embedder.embed_images(images)
-t = stage("embed images", t)
+image_vecs = get_image_vecs(embedder, paths, batch_size)
+t = stage("decode + embed", t)
 
 query_vec = embedder.embed_texts([query])[0]
 t = stage("embed query", t)
